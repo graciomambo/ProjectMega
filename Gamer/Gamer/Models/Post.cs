@@ -1,51 +1,85 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Gamer.Models
 {
     public class Post
     {
-        private int PostId { get; set; }
-        private String Title { get; set; }
-        private int PostTypeId { get; set; }
-        private PostType PostType { get; set; }
-        private DateTime PostDate { get; set; }
-        private String Content { get; set; }
-        private int CategoryId { get; set; }
-        private Category Category { get; set; }
-        public virtual ICollection<Tag> Tags { get; set; }
-        public virtual ICollection <Comment> Coments { get; set; }
-        private String Url { get; set; }
-        private Boolean Active { get; set; }
-        private int LayoutId { get; set; }
-        private Layout Layout { get; set; }    
-        private String Excerpt { get; set; }
+        public Post()
+        {
+            this.Tags = new HashSet<Tag>();
+            this.Comments = new HashSet<Comment>();
+          
+        }
+    
+        [Key]
+        public int PostId { get; set; }
 
-        public Post() { Tags = new HashSet<Tag>(); }
+        [ForeignKey("PostType")]
+        [DisplayName("Tipo")]
+        public int PostTypeId { get; set; }
+        [DisplayName("Template")]
+        [ForeignKey("Layout")]
+        public int LayoutId { get; set; }
+        [DisplayName("Categoria")]
+        [ForeignKey("Category")]
+        public int CategoryId { get; set; }
+        [DisplayName("Titulo")]
+        [StringLength(160)]
+        public String Title { get; set; }
+        [DisplayName("Data de Criação")]
+        [DataType(DataType.Date)]
+        public DateTime CreatedDate { get; set; }
+        [DisplayName("Data de Publicação")]
+        [DataType(DataType.Date)]
+        public DateTime PostedDate { get; set; }
+        public String Content { get; set; }
+        [DisplayName("Link")]
+        public String Url { get; set; }
+        [DisplayName("Resumo")]
+        public String Excerpt { get; set; }
+        [DisplayName("Publicado?")]
+        public Boolean Active { get; set; }
+        public virtual PostType PostType { get; set; }
+        public virtual Template Layout { get; set; }  
+        public virtual Category Category { get; set; }
+        public virtual ICollection<Tag> Tags { get; set; }
+        public virtual ICollection<Comment> Comments { get; set; }
+
+
+
     }
-    public class Category
+    public partial class Category
     {
         public Category()
         {
             this.Posts = new HashSet<Post>();
         }
-        private int Id { get; set; }
-        private String Name { get; set; }
-        private String Slug { get; set; }
-        private String Description { get; set; }
+        [Key]
+        [DisplayName("Categoria")]
+        public int CategoryId { get; set; }
+        [DisplayName("Categoria")]
+        public String Name { get; set; }
+        public String Slug { get; set; }
+        public String Description { get; set; }
         public virtual ICollection <Post> Posts { get; set; }
 
     }
-    public class Comment
+    public partial class Comment
     {
-        private int Id { get; set; }
-        private string Name { get; set; }
-        private String Slug { get; set; }
-        private String Description { get; set; }
-        private Post Post { get; set; }
-        private int PostId { get; set; }
+        [Key]
+        [DisplayName("Comentario")]
+        public int CommentId { get; set; }
+        public string Author { get; set; }
+        public String Content { get; set; }
+        public virtual Post Post { get; set; }
+        public int PostId { get; set; }
 
     }
     public partial class Tag
@@ -54,29 +88,38 @@ namespace Gamer.Models
         {
             this.Posts = new HashSet<Post>();
         }
-
-        public int Id { get; set; }
+        [Key]
+        [DisplayName("Tag")]
+        public int TagId { get; set; }
+        [DisplayName("Tag")]
         public string Name { get; set; }
         public virtual ICollection<Post> Posts { get; set; }
     }
-    public class PostType
+    public partial class PostType
     {
         public PostType()
         {
             this.Posts = new HashSet<Post>();
         }
-        private int Id { get; set; }
-        private String Name { get; set; }
-        public virtual ICollection <Post> Posts { get; set; }
+        [Key]
+        [DisplayName("Tipo")]
+        public int PostTypeId { get; set; }
+        [DisplayName("Tipo")]
+        public String Name { get; set; }
+        public virtual ICollection<Post> Posts { get; set; }
+
     }
-    public partial class Layout
+    public partial class Template
     {
-        public Layout()
+        public Template()
         {
             this.Posts = new HashSet<Post>();
         }
-        private int Id { get; set; }
-        private String Name { get; set; }
+        [Key]
+        [DisplayName("Template")]
+        public int LayoutId { get; set; }
+        [DisplayName("Template")]
+        public String Name { get; set; }
         public virtual ICollection <Post> Posts { get; set; }
     }
 }

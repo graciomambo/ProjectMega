@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gamer.Context;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -8,6 +9,7 @@ namespace Gamer.Controllers
 {
     public class HomeController : Controller
     {
+        GamerContext db = new GamerContext();
         public ActionResult Index()
         {
             return View();
