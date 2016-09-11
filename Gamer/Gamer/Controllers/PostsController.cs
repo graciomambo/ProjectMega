@@ -9,6 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using Gamer.Context;
 using Gamer.Models;
+using System.IO;
 
 namespace Gamer.Controllers
 {
@@ -19,7 +20,7 @@ namespace Gamer.Controllers
         // GET: Posts
         public async Task<ActionResult> Index()
         {
-            var posts = db.Posts.Include(p => p.Category).Include(p => p.Layout).Include(p => p.PostType);
+            var posts = db.Posts.Include(p => p.Category).Include(p => p.PostType);
             return View(await posts.ToListAsync());
         }
 
@@ -41,9 +42,10 @@ namespace Gamer.Controllers
         // GET: Posts/Create
         public ActionResult Create()
         {
-            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name");
-            ViewBag.LayoutId = new SelectList(db.Layouts, "LayoutId", "Name");
-            ViewBag.PostTypeId = new SelectList(db.PostTypes, "PostTypeId", "Name");
+      
+
+            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name");           
+            ViewBag.PostTypeId = new SelectList(db.PostTypes,"PostTypeId", "Name");
             return View();
         }
 
@@ -52,20 +54,37 @@ namespace Gamer.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "PostId,PostTypeId,LayoutId,CategoryId,Title,CreatedDate,PostedDate,Content,Url,Excerpt,Active")] Post post)
+        public async Task<ActionResult> Create([Bind(Include = "PostId,PostTypeId,LayoutId,CategoryId,Title,CreatedDate,PostedDate,Content,Url,Excerpt,Active")] Post post, HttpPostedFileBase url)
         {
+           
+
             if (ModelState.IsValid)
             {
-                db.Posts.Add(post);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                try
+                {
+                    if (url != null)
+                    {
+                        string path = Path.Combine(Server.MapPath("~/Files"), Path.GetFileName(url.FileName));
+                        url.SaveAs(path);
+                        post.validateAttributes();
+                        db.Posts.Add(post);
+                        await db.SaveChangesAsync();
+                        return RedirectToAction("Index");
+                    }
+                }
+                catch (Exception)
+                {
+                    ViewBag.FileStatus = "Error while file uploading."; ;
+                }
+
             }
 
             ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name", post.CategoryId);
-            ViewBag.LayoutId = new SelectList(db.Layouts, "LayoutId", "Name", post.LayoutId);
             ViewBag.PostTypeId = new SelectList(db.PostTypes, "PostTypeId", "Name", post.PostTypeId);
             return View(post);
         }
+
+    
 
         // GET: Posts/Edit/5
         public async Task<ActionResult> Edit(int? id)
@@ -79,8 +98,7 @@ namespace Gamer.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name", post.CategoryId);
-            ViewBag.LayoutId = new SelectList(db.Layouts, "LayoutId", "Name", post.LayoutId);
+            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name", post.CategoryId);         
             ViewBag.PostTypeId = new SelectList(db.PostTypes, "PostTypeId", "Name", post.PostTypeId);
             return View(post);
         }
@@ -92,14 +110,16 @@ namespace Gamer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit([Bind(Include = "PostId,PostTypeId,LayoutId,CategoryId,Title,CreatedDate,PostedDate,Content,Url,Excerpt,Active")] Post post)
         {
+           
             if (ModelState.IsValid)
             {
+                post.validateAttributes();
                 db.Entry(post).State = EntityState.Modified;
                 await db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
             ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name", post.CategoryId);
-            ViewBag.LayoutId = new SelectList(db.Layouts, "LayoutId", "Name", post.LayoutId);
+          
             ViewBag.PostTypeId = new SelectList(db.PostTypes, "PostTypeId", "Name", post.PostTypeId);
             return View(post);
         }
@@ -129,7 +149,21 @@ namespace Gamer.Controllers
             await db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
-
+        // GET: Posts/Details/5
+        public async Task<ActionResult> Browse(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Post post = await db.Posts.FindAsync(id);
+            if (post == null)
+            {
+                return HttpNotFound();
+            }
+            post.Views++;
+            return View(post);
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)

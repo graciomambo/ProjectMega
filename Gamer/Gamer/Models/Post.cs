@@ -13,9 +13,10 @@ namespace Gamer.Models
     {
         public Post()
         {
-            this.Tags = new HashSet<Tag>();
-            this.Comments = new HashSet<Comment>();
-          
+            Tags = new HashSet<Tag>();
+            Comments = new HashSet<Comment>();
+           
+
         }
     
         [Key]
@@ -24,35 +25,59 @@ namespace Gamer.Models
         [ForeignKey("PostType")]
         [DisplayName("Tipo")]
         public int PostTypeId { get; set; }
-        [DisplayName("Template")]
-        [ForeignKey("Layout")]
-        public int LayoutId { get; set; }
+   
         [DisplayName("Categoria")]
         [ForeignKey("Category")]
         public int CategoryId { get; set; }
         [DisplayName("Titulo")]
-        [StringLength(160)]
+        [StringLength(75)]
         public String Title { get; set; }
+        [ScaffoldColumn(false)]
         [DisplayName("Data de Criação")]
         [DataType(DataType.Date)]
         public DateTime CreatedDate { get; set; }
-        [DisplayName("Data de Publicação")]
+        [ScaffoldColumn(false)]
+        [DisplayName("Data Publicada")]
         [DataType(DataType.Date)]
-        public DateTime PostedDate { get; set; }
+        public DateTime? PostedDate { get; set; }
+        [DisplayName("Texto")]
+        [DataType(DataType.MultilineText)]
         public String Content { get; set; }
         [DisplayName("Link")]
+        [DataType(DataType.Upload)]
+        [Display(Name = "Upload File")]
+        [Required(ErrorMessage = "Please choose file to upload.")]
         public String Url { get; set; }
+
+       
+        [ScaffoldColumn(false)]
         [DisplayName("Resumo")]
+        [StringLength(140)]
         public String Excerpt { get; set; }
-        [DisplayName("Publicado?")]
+        [ScaffoldColumn(false)]
+        [DisplayName("Publicado")]
         public Boolean Active { get; set; }
+        [ScaffoldColumn(false)]
+        [DisplayName("Visualização")]
+        public int Views { get; set; }
         public virtual PostType PostType { get; set; }
-        public virtual Template Layout { get; set; }  
+        
         public virtual Category Category { get; set; }
         public virtual ICollection<Tag> Tags { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
 
-
+        public void validateAttributes()
+        {
+            CreatedDate = System.DateTime.Now;
+            if (Content.Count() > 140)
+                Excerpt = Content.Substring(1, 130) + "...";
+            else
+                Excerpt = Content+"...";
+            if (Active)
+               PostedDate = System.DateTime.Now;
+            else
+                PostedDate = System.DateTime.Now;
+        }
 
     }
     public partial class Category
@@ -109,17 +134,6 @@ namespace Gamer.Models
         public virtual ICollection<Post> Posts { get; set; }
 
     }
-    public partial class Template
-    {
-        public Template()
-        {
-            this.Posts = new HashSet<Post>();
-        }
-        [Key]
-        [DisplayName("Template")]
-        public int LayoutId { get; set; }
-        [DisplayName("Template")]
-        public String Name { get; set; }
-        public virtual ICollection <Post> Posts { get; set; }
-    }
+  
+
 }
